@@ -3,6 +3,7 @@
 import argparse
 import os
 import time
+from pathlib import Path
 
 import requests
 from flickrapi import FlickrAPI
@@ -12,15 +13,19 @@ secret = ''
 
 
 def download_uri(uri, dir='./'):
-    with open(dir + uri.split('/')[-1], 'wb') as f:
-        f.write(requests.get(uri, stream=True).content)
+	my_file = Path(dir + uri.split('/')[-1])
+	if my_file.is_file():
+		print('already downloaded '+ str(my_file))
+	else:
+		with open(dir + uri.split('/')[-1], 'wb') as f:
+			f.write(requests.get(uri, stream=True).content)
 
 
 def get_urls(search='honeybees on flowers', n=10, download=False):
     t = time.time()
     flickr = FlickrAPI(key, secret)
     photos = flickr.walk(text=search,  # http://www.flickr.com/services/api/flickr.photos.search.html
-                         extras='url_o',
+                         extras='url_b',
                          per_page=100,
                          sort='relevance')
 
@@ -36,7 +41,7 @@ def get_urls(search='honeybees on flowers', n=10, download=False):
 
         try:
             # construct url https://www.flickr.com/services/api/misc.urls.html
-            url = photo.get('url_o')  # original size
+            url = photo.get('url_b')  # original size
             if url is None:
                 url = 'https://farm%s.staticflickr.com/%s/%s_%s_b.jpg' % \
                       (photo.get('farm'), photo.get('server'), photo.get('id'), photo.get('secret'))  # large size
@@ -47,7 +52,7 @@ def get_urls(search='honeybees on flowers', n=10, download=False):
 
             urls.append(url)
             print('%g/%g %s' % (i, n, url))
-        except:
+        except IOError:
             print('%g/%g error...' % (i, n))
 
     # import pandas as pd
@@ -59,10 +64,18 @@ def get_urls(search='honeybees on flowers', n=10, download=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--search', type=str, default='honeybees on flowers', help='flickr search term')
+    parser.add_argument('--searchfile', type=str, default='', help='file with search terms')
     parser.add_argument('--n', type=int, default=10, help='number of images')
     parser.add_argument('--download', action='store_true', help='download images')
     opt = parser.parse_args()
 
-    get_urls(search=opt.search,  # search term
-             n=opt.n,  # max number of images
-             download=opt.download)  # download images
+    if opt.searchfile == "":
+	    get_urls(search=opt.search,  # search term
+	    		 n=opt.n,  # max number of images
+	    		 download=opt.download)  # download images
+    else:
+        print('Batch loading')
+        with open(opt.searchfile, 'r') as searchfile:
+            tags = searchfile.readlines()
+            for tag in tags:
+                get_urls(search=tag.rstrip(), n=opt.n, download=opt.download)

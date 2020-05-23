@@ -46,6 +46,11 @@ All images saved to /Users/glennjocher/PycharmProjects/flickr_scraper/images/hon
 ```
 <img src="https://user-images.githubusercontent.com/26833433/75074332-4792c600-54b0-11ea-8c98-22acf58ba8e7.jpg" width="">
 
+
+```bash
+$ python3 flickr_scraper.py --searchfile 'tags.txt' --n 1000 --download
+
+
 # Cite
 
 [![DOI](https://zenodo.org/badge/242235660.svg)](https://zenodo.org/badge/latestdoi/242235660)
